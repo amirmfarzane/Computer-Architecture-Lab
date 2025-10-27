@@ -19,16 +19,26 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-
 module EXE_STAGE(
+    input clk,
+    input rst,
     input [31:0] pc,
     input [31:0] instruction_memory,
-    output [31:0] output_pc,
-    output [31:0] output_instruction_memory
+    output wire flush,
+    output reg [31:0] output_pc,
+    output reg [31:0] output_instruction_memory
 );
     
-    // Pass inputs directly to outputs
-    assign output_pc = pc;
-    assign output_instruction_memory = instruction_memory;
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            output_pc <= 32'b0;
+            output_instruction_memory <= 32'b0;
+        end else begin
+            // Normal operation
+            output_pc <= pc;
+            output_instruction_memory <= instruction_memory;
+        end
+    end
+    assign flush = 0;
     
 endmodule
