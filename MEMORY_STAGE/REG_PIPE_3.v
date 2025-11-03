@@ -23,7 +23,7 @@ module REG_PIPE_3(
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             Val_Rm_out <= 32'b0;
-            Dest_out <= 32'b0;
+            Dest_out <= 4'b0;
             ALU_Res_out <= 32'b0;
             WB_EN_out <= 1'b0;
             MEM_R_EN_out <= 1'b0;
@@ -34,7 +34,15 @@ module REG_PIPE_3(
             ALU_Res_out <= ALU_Res;
             WB_EN_out <=  WB_EN;
             MEM_R_EN_out <= MEM_R_EN;
-            MEM_W_EN_out <= MEM_W_EN;
+            MEM_W_EN_out <= MEM_W_EN3
+            
+            
+            
+            
+            
+            
+            
+            3;
         end
     end
     
