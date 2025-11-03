@@ -26,11 +26,9 @@ module TEST_BENCH;
     reg rst;
     reg [31:0] pc;
     reg [31:0] instruction_memory;
-    
     // Outputs
     wire [31:0] pc_out;
     wire [31:0] instruction_memory_out;
-    
     // Instantiate the Unit Under Test (UUT)
     ARM_TOP uut (
         .clk(clk),
@@ -40,10 +38,8 @@ module TEST_BENCH;
         .pc_out(pc_out),
         .instruction_memory_out(instruction_memory_out)
     );
-    
     // Clock generation
-    always #5 clk = ~clk;  // 100MHz clock (10ns period)
-    
+    always #5 clk = ~clk;  // 100MHz clock (10ns period)  
     // Test cases
     initial begin
         // Initialize Inputs
@@ -54,7 +50,6 @@ module TEST_BENCH;
         #5
         rst = 0;
         #100
-        
         $finish;
     end
    

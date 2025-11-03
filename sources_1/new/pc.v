@@ -20,17 +20,16 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module pc #(parameter WIDTH = 32) (
-input  wire clk,
+module pc ( input  wire clk,
     input  wire rst,
     input  wire freeze,
-    input  wire [WIDTH-1:0] d,    
-    output reg  [WIDTH-1:0] c      
+    input  wire [31:0] d,    
+    output reg  [31:0] c      
 );
 
 always @(posedge clk, rst) begin
         if (rst) begin
-            c <= {WIDTH {1'B0}};
+            c <= 32'b0;
         end else begin
             if (freeze) begin
                 c <= c;
