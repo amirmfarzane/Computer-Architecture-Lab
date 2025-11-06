@@ -5,8 +5,6 @@
 module ARM_TOP (
     input clk,
     input rst,
-    input [31:0] pc,
-    input [31:0] instruction_memory,
     output reg [31:0] pc_out,
     output reg [31:0] instruction_memory_out
 );
@@ -49,10 +47,11 @@ module ARM_TOP (
     assign ba = 32'b0;
     assign bs = 1'b0;
     assign Hazard = 1'b0;
-    assign WB_WB_EN = 1'b0;
+    assign WB_WB_EN = 1'b1;
     assign WB_WB_value = 32'b0;
     assign WB_WB_dest = 4'b0;
     assign status = 4'b0;
+    assign fz = 1'b0;
 
     // IF stage
     IF_STAGE m1 (

@@ -24,8 +24,6 @@ module TEST_BENCH;
     // Inputs
     reg clk;
     reg rst;
-    reg [31:0] pc;
-    reg [31:0] instruction_memory;
     // Outputs
     wire [31:0] pc_out;
     wire [31:0] instruction_memory_out;
@@ -33,8 +31,6 @@ module TEST_BENCH;
     ARM_TOP uut (
         .clk(clk),
         .rst(rst),
-        .pc(pc),
-        .instruction_memory(instruction_memory),
         .pc_out(pc_out),
         .instruction_memory_out(instruction_memory_out)
     );
@@ -45,8 +41,6 @@ module TEST_BENCH;
         // Initialize Inputs
         rst = 1;
         clk = 0;
-        pc = 32'h00000000;
-        instruction_memory = 32'h00000000;
         #5
         rst = 0;
         #100
