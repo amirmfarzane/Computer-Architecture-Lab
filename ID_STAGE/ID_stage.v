@@ -117,7 +117,7 @@ module ID_STAGE (
     assign WB_EN = CU_output[3];
     assign Branch = CU_output[4];
     assign Status_update = s;
-    assign shift_operand = {shift_imm, shift}; // example concatenation
+    assign shift_operand = instruction[11:0]; // example concatenation
     assign imm = i;
     assign signed_imm_24 = instruction[23:0];
     assign Dest = rd;
