@@ -73,8 +73,7 @@ module ID_STAGE (
     wire or_output;
     wire condition_passed;
     
-    assign rm = instruction[3:0];
-    assign rn = instruction[19:16];
+    
     
     assign src4_mux_out = (uncond_MEM_W_EN) ? rd : rm;
     assign src9_mux_out = (or_output) ? CU_output : 9'b0;
@@ -117,7 +116,10 @@ module ID_STAGE (
     assign WB_EN = CU_output[3];
     assign Branch = CU_output[4];
     assign Status_update = s;
-    assign shift_operand = {shift_imm, shift}; // example concatenation
+    assign shift_operand = instruction[11:0]; // example concatenation
+//    assign rm = instruction[3:16];
+    assign rn = instruction[19:16];
+    
     assign imm = i;
     assign signed_imm_24 = instruction[23:0];
     assign Dest = rd;

@@ -43,6 +43,21 @@ module ARM_TOP (
     wire [31:0] WB_WB_value;
     wire [3:0] WB_WB_dest;
     wire [3:0] status;
+    
+        // After ID -> REG_PIPE_2 outputs
+    wire        EXE_WB_EN_2;
+    wire        EXE_MEM_R_EN_2;
+    wire        EXE_MEM_W_EN_2;
+    wire [3:0]  EXE_EXE_CMD_2;
+    wire        EXE_B_2;
+    wire        EXE_S_2;
+    wire [31:0] EXE_Val_Rn_2;
+    wire [31:0] EXE_Val_Rm_2;
+    wire [11:0] EXE_shift_operand_2;
+    wire        EXE_imm_2;
+    wire [23:0] EXE_signed_imm_24_2;
+    wire [3:0]  EXE_Dest_2;
+
 
     assign ba = 32'b0;
     assign bs = 1'b0;
@@ -107,7 +122,7 @@ module ARM_TOP (
     );
     
     // Updated REG_PIPE_2
-    REG_PIPE_2 r2 (
+       REG_PIPE_2 r2 (
         .clk(clk),
         .rst(rst),
         .flush(f),
@@ -125,41 +140,69 @@ module ARM_TOP (
         .imm(imm),
         .signed_imm_24(signed_imm_24),
         .Dest(Dest),
+    
         .output_pc(ps_pipe_2),
         .output_instruction_memory(ins_pipe_2),
-        .out_WB_EN(),
-        .out_MEM_R_EN(),
-        .out_MEM_W_EN(),
-        .out_EXE_CMD(),
-        .out_B(),
-        .out_S(),
-        .out_Val_Rn(),
-        .out_Val_Rm(),
-        .out_shift_operand(),
-        .out_imm(),
-        .out_signed_imm_24(),
-        .out_Dest()
-    );
     
-    // EXE stage
+        .out_WB_EN(EXE_WB_EN_2),
+        .out_MEM_R_EN(EXE_MEM_R_EN_2),
+        .out_MEM_W_EN(EXE_MEM_W_EN_2),
+        .out_EXE_CMD(EXE_EXE_CMD_2),
+        .out_B(EXE_B_2),
+        .out_S(EXE_S_2),
+        .out_Val_Rn(EXE_Val_Rn_2),
+        .out_Val_Rm(EXE_Val_Rm_2),
+        .out_shift_operand(EXE_shift_operand_2),
+        .out_imm(EXE_imm_2),
+        .out_signed_imm_24(EXE_signed_imm_24_2),
+        .out_Dest(EXE_Dest_2)
+    );
+
+    
+    // EXE stage (updated)
     EXE_STAGE m3 (
         .clk(clk),
         .rst(rst),
-        .pc(ps_pipe_2),
-        .instruction_memory(ins_pipe_2),
-        .output_pc(ps_stage_3),
-        .output_instruction_memory(ins_stage_3),
-        .flush(f)
+        .WB_EN(WB_EN),
+        .MEM_R_EN(MEM_R_EN),
+        .MEM_W_EN(MEM_W_EN),
+        .EXE_CMD(EXE_CMD),
+        .B(Branch),
+        .S(Status_update),
+        .PC(ps_pipe_2),
+        .Val_Rn(Val_Rn),
+        .Val_Rm(Val_Rm),
+        .Imm(EXE_imm_2),  // assuming immediate is Val_Rm here; adjust as needed
+        .Shift_operand(shift_operand),
+        .Signed_EX_Imm24(signed_imm_24),
+        .Dest(Dest),
+        .Status(status),
+        .WB_EN_out(WB_EN_out),
+        .MEM_R_EN_out(MEM_R_EN_out),
+        .MEM_W_EN_out(MEM_W_EN_out),
+        .ALU_Res(ALU_Res),
+        .Val_Rm_out(Val_Rm_out),
+        .Dest_out(Dest_out),
+        .Branch_Address(Branch_Address),
+        .Status_out(Status_out)
     );
     
-    // Remaining pipeline registers and stages
+    // REG_PIPE_3
     REG_PIPE_3 r3 (
         .clk(clk),
         .rst(rst),
-        .pc(ps_stage_3),
-        .instruction_memory(ins_stage_3),
-        .output_pc(ps_pipe_3),
-        .output_instruction_memory(ins_pipe_3)
+        .WB_EN(WB_EN_out),
+        .MEM_R_EN(MEM_R_EN_out),
+        .MEM_W_EN(MEM_W_EN_out),
+        .ALU_Res(ALU_Res),
+        .Val_Rm(Val_Rm_out),
+        .Dest(Dest_out),
+        .WB_EN_out(),
+        .MEM_R_EN_out(),
+        .MEM_W_EN_out(),
+        .Val_Rm_out(),
+        .Dest_out(),
+        .ALU_Res_out()
     );
     
     MEM_STAGE m4 (

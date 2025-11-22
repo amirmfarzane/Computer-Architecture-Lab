@@ -30,7 +30,7 @@ module IF_STAGE(
     output [31:0] instruction_memory
 );
     // Internal wires
-    wire [11:0] pc_out;
+    wire [31:0] pc_out;
     wire [31:0] adder_out;
     wire [31:0] mux_out;
     wire cout;
