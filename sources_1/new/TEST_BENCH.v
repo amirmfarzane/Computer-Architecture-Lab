@@ -43,7 +43,7 @@ module TEST_BENCH;
         clk = 0;
         #5
         rst = 0;
-        #100
+        #1000
         $finish;
     end
    

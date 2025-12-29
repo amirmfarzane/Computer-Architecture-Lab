@@ -20,24 +20,36 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module WB_STAGE(
+module WB_STAGE (
     input clk,
     input rst,
-    input [31:0] pc,
-    input [31:0] instruction_memory,
-    output reg [31:0] output_pc,
-    output reg [31:0] output_instruction_memory
-);
+    input        WB_EN,
+    input [3:0]  Dest,
+    input        MEM_R_EN,
+    input [31:0] ALU_res,
+    input [31:0] MEM_res,
     
+    output reg [3:0]  WB_Dest,
+    output reg [31:0] WB_value,
+    output reg        WB_WB_en
+);
+
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            output_pc <= 32'b0;
-            output_instruction_memory <= 32'b0;
+            WB_Dest   <= 4'b0;
+            WB_value  <= 32'b0;
+            WB_WB_en  <= 1'b0;
         end else begin
-            // Normal operation
-            output_pc <= pc;
-            output_instruction_memory <= instruction_memory;
+            WB_Dest  <= Dest;
+            WB_WB_en <= WB_EN;
+
+            // MUX: select write-back value
+            if (MEM_R_EN)
+                WB_value <= MEM_res;
+            else
+                WB_value <= ALU_res;
         end
     end
-    
+
 endmodule
+

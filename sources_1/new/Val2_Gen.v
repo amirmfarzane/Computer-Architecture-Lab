@@ -18,10 +18,17 @@ module Val2_Gen (
             // Immediate rotate (ARM encoding)
             Val2 = {{24'b0, imm_val}, {24'b0, imm_val}} >> (rotate_imm * 2);
 
-        end else begin
-            // Register shift
-            
-            Val2 = 32'b0;
+         end else begin
+            case(imm_val[6:5])
+               2'b00:
+                  Val2 = Val_Rm << (Shift_operand[11:7]);
+               2'b01:
+                  Val2 = Val_Rm >> (Shift_operand[11:7]);
+               2'b10:
+                  Val2 = Val_Rm >>> (Shift_operand[11:7]);
+               2'b11:
+                Val2 = {{24'b0, Val_Rm},{24'b0, Val_Rm}} >> (Shift_operand[11:7]);
+            endcase
         end
     end
 

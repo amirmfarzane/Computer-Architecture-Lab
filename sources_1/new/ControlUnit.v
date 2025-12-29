@@ -35,8 +35,9 @@ always @(*) begin
     cu_out[1] = mode[1] & ~mode[0];
     cu_out[6] = (~mode[1] & mode[0]) & ~s_in;
     cu_out[7] = (~mode[1] & mode[0]) & s_in;
-    cu_out[8] = (~mode[1] & ~mode[0] & (opcode != 4'b1000 & opcode != 4'b1010)) | (~mode[1] & mode[0] & s_in);
-    if(~mode[1] & ~mode[0]) begin
+//    cu_out[8] = (~mode[1] & ~mode[0] & (opcode != 4'b1000 & opcode != 4'b1010)) | (~mode[1] & mode[0] & s_in);
+    cu_out[8] = 1'b1;
+    if(1'b1) begin
             case(opcode)
             4'b1101: begin
                 cu_out[5:2] = 4'b0001;
@@ -46,6 +47,10 @@ always @(*) begin
             end
             4'b0100: begin
                 cu_out[5:2] = 4'b0010;
+                if(instruction[19:16] == 4'b0 && instruction[20] == 1'b0 && instruction[27:26] == 2'b01)begin
+                    cu_out[8] = 1'b0;
+                    cu_out[6] = 1'b1;
+                end
             end
             4'b0101: begin
                 cu_out[5:2] = 4'b0011;
@@ -67,9 +72,11 @@ always @(*) begin
             end
             4'b1010: begin
                 cu_out[5:2] = 4'b0100;
+                cu_out[8] = 1'b0;
             end
             4'b1000: begin
                 cu_out[5:2] = 4'b0110;
+                cu_out[8] = 1'b0;
             end
         endcase 
     end else begin

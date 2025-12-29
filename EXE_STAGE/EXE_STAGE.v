@@ -24,10 +24,10 @@ module EXE_STAGE (
     output wire [31:0] Val_Rm_out,
     output wire [3:0]  Dest_out,
     output wire [31:0] Branch_Address,
-    output wire [3:0]  Status_out       
+    output wire [3:0]  Status_out   
 );
     wire Val2_Src = MEM_W_EN | MEM_R_EN;
-
+    wire cout;
     wire [31:0] Val2;
     Val2_Gen val2_gen_i (
         .Val_Rm(Val_Rm),
@@ -47,10 +47,12 @@ module EXE_STAGE (
         .Flags(alu_flags)
     );
 
-    Adder adder_i (
-        .PC(PC),
-        .Signed_EX_Imm24(Signed_EX_Imm24),
-        .Branch_Address(Branch_Address)
+    adder_32bit adder_inst (
+        .a(PC),
+        .b({8'b00000000, Signed_EX_Imm24}),
+        .cin(1'b0),
+        .sum(Branch_Address),
+        .cout(cout)
     );
 
     Status_Reg psr_i (

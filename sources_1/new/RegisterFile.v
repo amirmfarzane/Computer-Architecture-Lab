@@ -33,7 +33,7 @@ module RegisterFile(
 );
 
     reg [31:0] registers [15:0];
-    integer i;
+    integer i=0 ;
 
     assign reg_out_1 = registers[src_1];
     assign reg_out_2 = registers[src_2];

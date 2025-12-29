@@ -29,7 +29,7 @@ module ALU (
                 V_out = (Val1[31]^Val2[31]) & (Val1[31]^ALU_Res[31]);
             end
             4'b0101: begin                              // SBC
-                {C_out, ALU_Res} = Val1 - Val2 - 1;
+                {C_out, ALU_Res} = Val1 - Val2;
                 C_out = ~C_out;
                 V_out = (Val1[31]^Val2[31]) & (Val1[31]^ALU_Res[31]);
             end

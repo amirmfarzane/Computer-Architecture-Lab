@@ -1,43 +1,54 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 10/20/2025 04:44:36 PM
-// Design Name: 
-// Module Name: MEM_stage
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
+module MEM_STAGE (
+    input  wire        clk,
+    input  wire        rst,
+    input  wire        MEM_R_EN,
+    input  wire        MEM_W_EN,
+    input  wire        WB_EN,
+    input  wire [31:0] ALU_Res,
+    input  wire [31:0] Val_Rm,
+    input  wire [3:0]  Dest,
 
-module MEM_STAGE(
-    input clk,
-    input rst,
-    input [31:0] pc,
-    input [31:0] instruction_memory,
-    output reg [31:0] output_pc,
-    output reg [31:0] output_instruction_memory
+    output wire [31:0] MEM_Result,
+    output wire [31:0] ALU_Res_out,
+    output wire [3:0]  Dest_out,
+    output wire        WB_EN_out,
+    output wire        MEM_R_EN_out
 );
-    
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            output_pc <= 32'b0;
-            output_instruction_memory <= 32'b0;
-        end else begin
-            // Normal operation
-            output_pc <= pc;
-            output_instruction_memory <= instruction_memory;
+
+    // -------------------------------------------------
+    // Address adjustment (subtract 1024 safely)
+    // -------------------------------------------------
+    wire [31:0] alu_res_adj;
+    assign alu_res_adj = (ALU_Res >= 32'd1024) ? (ALU_Res - 32'd1024) : 32'd0;
+
+    // Word address (2048 words)
+    wire [10:0] mem_addr;
+    assign mem_addr = alu_res_adj;
+
+    // -------------------------------------------------
+    // Distributed RAM (Async Read / Sync Write)
+    // -------------------------------------------------
+    (* ram_style = "distributed" *)
+    reg [31:0] data_mem [0:2047];
+
+    // synchronous write
+    always @(posedge clk) begin
+        if (MEM_W_EN) begin
+            data_mem[mem_addr] <= Val_Rm;
         end
     end
-    
+
+    // asynchronous read
+    assign MEM_Result = (MEM_R_EN) ? data_mem[mem_addr] : 32'b0;
+
+    // -------------------------------------------------
+    // Pipeline pass-through
+    // -------------------------------------------------
+    assign ALU_Res_out  = ALU_Res;
+    assign Dest_out     = Dest;
+    assign WB_EN_out    = WB_EN;
+    assign MEM_R_EN_out = MEM_R_EN;
+
 endmodule

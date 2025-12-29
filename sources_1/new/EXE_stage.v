@@ -14,8 +14,7 @@ module EXE_STAGE (
     input  wire [31:0] Imm,
     input  wire [11:0] Shift_operand,
     input  wire [23:0] Signed_EX_Imm24,
-    input  wire [3:0]  Dest,
-    input  wire [3:0]  Status,          
+    input  wire [3:0]  Dest,         
 
     output wire        WB_EN_out,
     output wire        MEM_R_EN_out,
@@ -42,7 +41,7 @@ module EXE_STAGE (
         .Val1(Val_Rn),
         .Val2(Val2),
         .EXE_CMD(EXE_CMD),
-        .Status(Status),
+        .Status(Status_out),
         .ALU_Res(ALU_Res),
         .Flags(alu_flags)
     );

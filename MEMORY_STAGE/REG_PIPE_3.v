@@ -34,15 +34,7 @@ module REG_PIPE_3(
             ALU_Res_out <= ALU_Res;
             WB_EN_out <=  WB_EN;
             MEM_R_EN_out <= MEM_R_EN;
-            MEM_W_EN_out <= MEM_W_EN3
-            
-            
-            
-            
-            
-            
-            
-            3;
+            MEM_W_EN_out <= MEM_W_EN33;
         end
     end
     

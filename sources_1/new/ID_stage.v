@@ -51,7 +51,8 @@ module ID_STAGE (
     output [3:0] rn,
     output [3:0] rm,
     output wire Two_src,
-    output [31:0] output_instruction_memory
+    output [31:0] output_instruction_memory,
+    output [3:0] src2
     );
 
     // Instruction fields
@@ -66,7 +67,6 @@ module ID_STAGE (
 
     // Control signals
     wire [8:0] CU_output;
-    wire [3:0] src4_mux_out;
     wire [8:0] src9_mux_out;
     wire uncond_MEM_W_EN;
     wire uncond_MEM_R_EN;
@@ -75,19 +75,19 @@ module ID_STAGE (
     
     
     
-    assign src4_mux_out = (uncond_MEM_W_EN) ? rd : rm;
+    assign src2 = (uncond_MEM_W_EN) ? rd : rm;
     assign src9_mux_out = (or_output) ? CU_output : 9'b0;
     assign Two_src = !(imm || uncond_MEM_R_EN);
     assign or_output = Hazard || condition_passed;
-    assign uncond_MEM_R_EN = CU_output[1];
-    assign uncond_MEM_W_EN = CU_output[2];
+    assign uncond_MEM_R_EN = src9_mux_out[7];
+    assign uncond_MEM_W_EN = src9_mux_out[6];
 
     // Register File
     RegisterFile RF (
         .clk(clk),
         .rst(rst),
         .src_1(rn),
-        .src_2(src4_mux_out),
+        .src_2(src2),
         .Dest_WB(WB_WB_dest),
         .Result_WB(WB_WB_value),
         .writeBackEN(WB_WB_EN),
@@ -110,15 +110,16 @@ module ID_STAGE (
 
     // Outputs
     assign PC = pc;
-    assign EXE_CMD = CU_output[8:5]; // example mapping
+    assign EXE_CMD = src9_mux_out[5:2]; // example mapping
     assign MEM_R_EN = uncond_MEM_R_EN;
     assign MEM_W_EN = uncond_MEM_W_EN;
-    assign WB_EN = CU_output[3];
-    assign Branch = CU_output[4];
+    assign WB_EN = src9_mux_out[8];
+    assign Branch = src9_mux_out[4];
     assign Status_update = s;
     assign shift_operand = instruction[11:0]; // example concatenation
 //    assign rm = instruction[3:16];
     assign rn = instruction[19:16];
+    assign rm = instruction[3:0];
     
     assign imm = i;
     assign signed_imm_24 = instruction[23:0];
