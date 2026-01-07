@@ -55,8 +55,11 @@
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 dist_mem_gen_1 your_instance_name (
-  .a(a),      // input wire [10 : 0] a
-  .spo(spo)  // output wire [31 : 0] spo
+  .a(a),      // input wire [4 : 0] a
+  .d(d),      // input wire [1023 : 0] d
+  .clk(clk),  // input wire clk
+  .we(we),    // input wire we
+  .spo(spo)  // output wire [1023 : 0] spo
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 

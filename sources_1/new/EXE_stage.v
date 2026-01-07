@@ -1,71 +1,103 @@
 module EXE_STAGE (
-    input  wire        clk,
-    input  wire        rst,
-
-    input  wire        WB_EN,
-    input  wire        MEM_R_EN,
-    input  wire        MEM_W_EN,
-    input  wire [3:0]  EXE_CMD,
-    input  wire        B,
-    input  wire        S,
-    input  wire [31:0] PC,
-    input  wire [31:0] Val_Rn,
-    input  wire [31:0] Val_Rm,
-    input  wire [31:0] Imm,
-    input  wire [11:0] Shift_operand,
-    input  wire [23:0] Signed_EX_Imm24,
-    input  wire [3:0]  Dest,         
-
-    output wire        WB_EN_out,
-    output wire        MEM_R_EN_out,
-    output wire        MEM_W_EN_out,
-    output wire [31:0] ALU_Res,
-    output wire [31:0] Val_Rm_out,
-    output wire [3:0]  Dest_out,
-    output wire [31:0] Branch_Address,
-    output wire [3:0]  Status_out   
+    input clk, rst,
+    input wb_en_in, mem_r_en_in, mem_w_en_in,
+    input [3:0] exe_cmd_in,
+    input [1:0] sel_src1, sel_src2,
+    input s_in, b_in,
+    input [31:0] pc_in,
+    input [3:0] src1_in, src2_in,
+    input [31:0] val_rn_in,
+    input [31:0] val_rm_in,
+    input [31:0] wb_value,
+    input [31:0] alu_res_mem,
+    input [11:0] shift_operand_in,
+    input imm_in,
+    input [23:0] signed_imm_24_in,
+    input [3:0] dest_in,
+    input c_in,
+    output wb_en_out, mem_r_en_out, mem_w_en_out, branch_taken,
+    output [3:0] src1_out, src2_out,
+    output [31:0] alu_res,
+    output [31:0] val_rm_out,
+    output [3:0] dest_out,
+    output [3:0] status_register_out,
+    output [31:0] branch_address
 );
-    wire Val2_Src = MEM_W_EN | MEM_R_EN;
-    wire cout;
-    wire [31:0] Val2;
-    Val2_Gen val2_gen_i (
-        .Val_Rm(Val_Rm),
-        .Imm(Imm),
-        .Shift_operand(Shift_operand),
-        .Val2_Src(Val2_Src),
-        .Val2(Val2)
+
+    wire [31:0] val2, mux1_out, mux2_out;
+    wire s_signal = mem_r_en_in | mem_w_en_in;
+    wire [3:0] status_register_in;
+
+    Mux_4To1 mux1(
+        .in0(val_rn_in),
+        .in1(alu_res_mem),
+        .in2(wb_value),
+        .in3(32'b0),
+        .sel(sel_src1),
+        .out(mux1_out)
     );
 
-    wire [3:0] alu_flags; // [N,Z,C,V]
-    ALU alu_i (
-        .Val1(Val_Rn),
-        .Val2(Val2),
-        .EXE_CMD(EXE_CMD),
-        .Status(Status_out),
-        .ALU_Res(ALU_Res),
-        .Flags(alu_flags)
+    Mux_4To1 mux2(
+        .in0(val_rm_in),
+        .in1(alu_res_mem),
+        .in2(wb_value),
+        .in3(32'b0),
+        .sel(sel_src2),
+        .out(mux2_out)
     );
 
-    adder_32bit adder_inst (
-        .a(PC),
-        .b({8'b00000000, Signed_EX_Imm24}),
-        .cin(1'b0),
-        .sum(Branch_Address),
-        .cout(cout)
+    Val2Generator val2_gen_i(
+        .s_flag(s_signal),
+        .result(val2),
+        .reg_value(mux2_out),
+        .sh_operand(shift_operand_in),
+        .is_imm(imm_in)
+       
     );
 
-    Status_Reg psr_i (
+    ALU alu_i(
+        .a_in(mux1_out),
+        .b_in(val2),
+        .op_code(exe_cmd_in),
+        .carry_in(c_in),
+        .result(alu_res),
+        .status(status_register_in)
+    );
+
+    Status_Register status_register(
         .clk(clk),
         .rst(rst),
-        .S(S),
-        .Flags_in(alu_flags),
-        .Status_out(Status_out)
+        .status_en(s_in),
+        .in_data(status_register_in),
+        .out_data(status_register_out)
     );
+    
+    
+    assign src1_out = src1_in;
+    assign src2_out =  src2_in;
+    assign dest_out = dest_in;
+    assign wb_en_out = wb_en_in;
+    assign mem_r_en_out = mem_r_en_in;
+    assign mem_w_en_out = mem_w_en_in;
+    assign val_rm_out = mux2_out;
+    assign branch_taken = b_in;
+    assign branch_address = pc_in + {{8{signed_imm_24_in[23]}}, signed_imm_24_in};
+    assign src1_out = src1_in;
+    assign src2_out =  src2_in;
 
-    assign WB_EN_out     = WB_EN;
-    assign MEM_R_EN_out  = MEM_R_EN;
-    assign MEM_W_EN_out  = MEM_W_EN;
-    assign Val_Rm_out    = Val_Rm;   
-    assign Dest_out      = Dest;
+
 
 endmodule
+
+
+
+
+
+
+
+
+
+
+
+
+

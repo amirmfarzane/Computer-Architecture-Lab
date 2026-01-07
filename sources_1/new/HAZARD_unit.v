@@ -1,50 +1,34 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 12/22/2025 05:07:35 PM
-// Design Name: 
-// Module Name: HAZARD_unit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-
-module HAZARD_unit(
-    input [3:0]src1,
-    input [3:0]src2,
-    input [3:0] exe_dest,
-    input exe_wb_en,
-    input [3:0]mem_dest,
-    input mem_wb_en,
-    input two_src,
-    output reg hazard_detected
-    );
-    reg hazard_from_exe;
-    reg hazard_from_mem;
+module HAZARD_UNIT (
+    input  wire        clk,
+    input  wire        rst,
+    input  wire [3:0]  src1_id_exe,
+    input  wire [3:0]  src2_id_exe,
+    input  wire [3:0]  exe_dest,
+    input  wire [3:0]  mem_dest,
+    input  wire        exe_wb_en,
+    input  wire        mem_wb_en,
+    input  wire        exe_mem_r_en,
+    input  wire        forward_en,
+    input  wire        two_src,
+    output reg         hazard
+);
 
     always @(*) begin
-        
-        hazard_from_exe = exe_wb_en && (
-            (src1 == exe_dest) ||
-            (two_src && (src2 == exe_dest))
-        );
+        hazard = 1'b0;
 
-        hazard_from_mem = mem_wb_en && (
-            (src1 == mem_dest) ||
-            (two_src && (src2 == mem_dest))
-        );
-        hazard_detected = hazard_from_exe || hazard_from_mem;
+        if (forward_en) begin
+            if ((src1_id_exe == exe_dest && exe_wb_en && exe_mem_r_en) ||
+                (src2_id_exe == exe_dest && exe_wb_en && exe_mem_r_en)) begin
+                hazard = 1'b1;
+            end
+        end else begin
+            if ((src1_id_exe == exe_dest && exe_wb_en) ||
+                (src1_id_exe == mem_dest && mem_wb_en) ||
+                (two_src && src2_id_exe == exe_dest && exe_wb_en) ||
+                (two_src && src2_id_exe == mem_dest && mem_wb_en)) begin
+                hazard = 1'b1;
+            end
+        end
     end
-endmodule
 
+endmodule

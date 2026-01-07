@@ -54,8 +54,11 @@
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
 COMPONENT dist_mem_gen_1
   PORT (
-    a : IN STD_LOGIC_VECTOR(10 DOWNTO 0);
-    spo : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+    a : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
+    d : IN STD_LOGIC_VECTOR(1023 DOWNTO 0);
+    clk : IN STD_LOGIC;
+    we : IN STD_LOGIC;
+    spo : OUT STD_LOGIC_VECTOR(1023 DOWNTO 0)
   );
 END COMPONENT;
 -- COMP_TAG_END ------ End COMPONENT Declaration ------------
@@ -67,6 +70,9 @@ END COMPONENT;
 your_instance_name : dist_mem_gen_1
   PORT MAP (
     a => a,
+    d => d,
+    clk => clk,
+    we => we,
     spo => spo
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------

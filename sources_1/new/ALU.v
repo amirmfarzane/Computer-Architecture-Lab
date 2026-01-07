@@ -1,47 +1,97 @@
-module ALU (
-    input  wire [31:0] Val1,
-    input  wire [31:0] Val2,
-    input  wire [3:0]  EXE_CMD,       
-    input  wire [3:0]  Status,       
-    output reg  [31:0] ALU_Res,
-    output reg  [3:0]  Flags         
+module ALU(
+    input  wire [31:0] a_in,
+    input  wire [31:0] b_in,
+    input  wire [3:0] op_code,
+    input  wire carry_in,
+    output reg  [31:0] result,
+    output wire [3:0]  status
 );
-    wire C_in = Status[1];
-    reg  C_out, V_out;
+
+    reg  carry_out;
+    reg  overflow;
+    wire zero;
+    wire negative;
+
+    wire [32:0] a_ext = {1'b0, a_in};
+    wire [32:0] b_ext = {1'b0, b_in};
+    wire [32:0] carry_ext = {32'b0, carry_in};
+    wire [32:0] not_carry_ext = {32'b0, ~carry_in};
+
+    reg [32:0] temp;
 
     always @(*) begin
-        C_out = 1'b0; V_out = 1'b0; ALU_Res = 32'b0;
+        carry_out = 0;
+        overflow  = 0;
 
-        case (EXE_CMD)
-            4'b0001: ALU_Res = Val2;                    // MOV
-            4'b1001: ALU_Res = ~Val2;                   // MVN
-            4'b0010: begin                              // ADD
-                {C_out, ALU_Res} = Val1 + Val2;
-                V_out = (~(Val1[31]^Val2[31])) & (Val1[31]^ALU_Res[31]);
+        case(op_code)
+            4'b0010: begin
+                temp    = a_ext + b_ext;
+                result  = temp[31:0];
+                carry_out = temp[32];
+                overflow  = (a_in[31] == b_in[31]) && (result[31] != a_in[31]);
             end
-            4'b0011: begin                              // ADC
-                {C_out, ALU_Res} = Val1 + Val2 + C_in;
-                V_out = (~(Val1[31]^Val2[31])) & (Val1[31]^ALU_Res[31]);
+
+            4'b0011: begin
+                temp    = a_ext + b_ext + carry_ext;
+                result  = temp[31:0];
+                carry_out = temp[32];
+                overflow  = (a_in[31] == b_in[31]) && (result[31] != a_in[31]);
             end
-            4'b0100: begin                              // SUB / CMP
-                {C_out, ALU_Res} = Val1 - Val2;
-                C_out = ~C_out;                         
-                V_out = (Val1[31]^Val2[31]) & (Val1[31]^ALU_Res[31]);
+
+            4'b0100: begin
+                temp    = a_ext - b_ext;
+                result  = temp[31:0];
+                carry_out = ~temp[32];
+                overflow  = (a_in[31] != b_in[31]) && (result[31] != a_in[31]);
             end
-            4'b0101: begin                              // SBC
-                {C_out, ALU_Res} = Val1 - Val2;
-                C_out = ~C_out;
-                V_out = (Val1[31]^Val2[31]) & (Val1[31]^ALU_Res[31]);
+
+            4'b0101: begin
+                temp    = a_ext - b_ext - not_carry_ext;
+                result  = temp[31:0];
+                carry_out = ~temp[32];
+                overflow  = (a_in[31] != b_in[31]) && (result[31] != a_in[31]);
             end
-            4'b0110: ALU_Res = Val1 & Val2;             // AND / TST
-            4'b0111: ALU_Res = Val1 | Val2;             // ORR
-            4'b1000: ALU_Res = Val1 ^ Val2;             // EOR
-            default: ALU_Res = 32'b0;                  
+
+            4'b0110: begin
+                result    = a_in & b_in;
+                carry_out = 0;
+                overflow  = 0;
+            end
+
+            4'b0111: begin
+                result    = a_in | b_in;
+                carry_out = 0;
+                overflow  = 0;
+            end
+
+            4'b1000: begin
+                result    = a_in ^ b_in;
+                carry_out = 0;
+                overflow  = 0;
+            end
+
+            4'b0001: begin
+                result    = b_in;
+                carry_out = 0;
+                overflow  = 0;
+            end
+
+            4'b1001: begin
+                result    = ~b_in;
+                carry_out = 0;
+                overflow  = 0;
+            end
+
+            default: begin
+                result    = 32'd0;
+                carry_out = 0;
+                overflow  = 0;
+            end
         endcase
-
-        Flags[3] = ALU_Res[31];             // N
-        Flags[2] = (ALU_Res == 32'b0);      // Z
-        Flags[1] = C_out;                   // C
-        Flags[0] = V_out;                   // V
     end
+
+    assign zero     = (result == 32'd0);
+    assign negative = result[31];
+    assign status   = {zero, carry_out, overflow, negative};
+
 endmodule

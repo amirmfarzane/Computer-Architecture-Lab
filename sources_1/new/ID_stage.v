@@ -1,130 +1,85 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 10/20/2025 04:34:05 PM
-// Design Name: 
-// Module Name: ID_stage
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-
-
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
 module ID_STAGE (
-    input clk,
-    input rst,
-    input Hazard,
-    input [31:0] instruction,
-    input [31:0] pc,
-    input WB_WB_EN,
-    input [31:0] WB_WB_value,
-    input [3:0] WB_WB_dest,
-    input [3:0] status,
-    
-    output [31:0] PC,
-    output [3:0] EXE_CMD,
-    output MEM_R_EN,
-    output MEM_W_EN,
-    output WB_EN,
-    output Branch,
-    output Status_update,
-    
-    output [31:0] Val_Rn,
-    output [31:0] Val_Rm,
-    output [11:0] shift_operand,
+    input clk, rst, hazard, wb_wb_en,
+    input [3:0] status_reg_out, wb_dest,
+    input [31:0] pc_in, instruction, wb_value,
+    output wb_en, mem_r_en, mem_w_en, b, s,
+    output [3:0] exe_cmd,
+    output [31:0] pc_out, val_rn, val_rm,
     output imm,
+    output [11:0] shift_operand,
     output [23:0] signed_imm_24,
-    output [3:0] Dest,
-    output [3:0] rn,
-    output [3:0] rm,
-    output wire Two_src,
-    output [31:0] output_instruction_memory,
-    output [3:0] src2
-    );
+    output [3:0] dest,
+    output c_out,
+    output two_src, 
+    output [3:0] src1, src2
+);
 
-    // Instruction fields
-    wire [3:0] cond = instruction[31:28];
+    wire S = instruction[20];
     wire [1:0] mode = instruction[27:26];
-    wire i = instruction[25];
     wire [3:0] opcode = instruction[24:21];
-    wire s = instruction[20];
+    wire [3:0] cond = instruction[31:28];
+    wire [3:0] rn = instruction[19:16];
+    wire [3:0] rm = instruction[3:0];
     wire [3:0] rd = instruction[15:12];
-    wire [4:0] shift_imm = instruction[11:7];
-    wire [1:0] shift = instruction[6:5];
+    
+    wire wb_en_cu_out, mem_read_cu_out, mem_write_cu_out, b_cu_out, s_cu_out, condition_check_out;
+    wire [3:0] exe_cmd_cu_out;
+    wire cu_en = (~condition_check_out | hazard);
+    
+    
+    assign shift_operand = instruction[11:0];
+    assign signed_imm_24 = instruction[23:0];
+    assign dest = instruction[15:12];
+    assign imm = instruction[25];
+    assign pc_out = pc_in;
+    assign c_out = status_reg_out[2];
+    assign two_src = (~imm) | mem_write_cu_out;
 
-    // Control signals
-    wire [8:0] CU_output;
-    wire [8:0] src9_mux_out;
-    wire uncond_MEM_W_EN;
-    wire uncond_MEM_R_EN;
-    wire or_output;
-    wire condition_passed;
     
-    
-    
-    assign src2 = (uncond_MEM_W_EN) ? rd : rm;
-    assign src9_mux_out = (or_output) ? CU_output : 9'b0;
-    assign Two_src = !(imm || uncond_MEM_R_EN);
-    assign or_output = Hazard || condition_passed;
-    assign uncond_MEM_R_EN = src9_mux_out[7];
-    assign uncond_MEM_W_EN = src9_mux_out[6];
+    assign src1 = rn;
+    assign src2 = mem_write_cu_out ? rd : rm;
 
-    // Register File
+    assign wb_en    = cu_en ? 1'b0 : wb_en_cu_out;
+    assign mem_r_en = cu_en ? 1'b0 : mem_read_cu_out;
+    assign mem_w_en = cu_en ? 1'b0 : mem_write_cu_out;
+    assign b        = cu_en ? 1'b0 : b_cu_out;
+    assign s        = cu_en ? 1'b0 : s_cu_out;
+    assign exe_cmd  = cu_en ? 4'd0 : exe_cmd_cu_out;
+
+    
+    
     RegisterFile RF (
         .clk(clk),
-        .rst(rst),
-        .src_1(rn),
+        .rst(rst),  
+        .src_1(src1),
         .src_2(src2),
-        .Dest_WB(WB_WB_dest),
-        .Result_WB(WB_WB_value),
-        .writeBackEN(WB_WB_EN),
-        .reg_out_1(Val_Rn),
-        .reg_out_2(Val_Rm)
+        .Dest_WB(wb_dest),
+        .Result_WB(wb_value),
+        .writeBackEN(wb_wb_en),
+        .reg_out_1(val_rn),
+        .reg_out_2(val_rm)
     );
 
-    // Condition checker
-    ConditionCheck CC (
-        .inst_cond(cond),
-        .status_reg_out(status),
-        .condition_out(condition_passed)
-    );
-    
-    // Control unit
     ControlUnit CU (
-        .instruction(instruction),
-        .cu_out(CU_output)
+        .mode_in(mode),
+        .opcode_in(opcode),
+        .s_in(S),
+        .wb_enable(wb_en_cu_out),
+        .mem_read(mem_read_cu_out),
+        .mem_write(mem_write_cu_out),
+        .branch_out(b_cu_out),
+        .s_out(s_cu_out),
+        .exe_command(exe_cmd_cu_out)
     );
 
-    // Outputs
-    assign PC = pc;
-    assign EXE_CMD = src9_mux_out[5:2]; // example mapping
-    assign MEM_R_EN = uncond_MEM_R_EN;
-    assign MEM_W_EN = uncond_MEM_W_EN;
-    assign WB_EN = src9_mux_out[8];
-    assign Branch = src9_mux_out[4];
-    assign Status_update = s;
-    assign shift_operand = instruction[11:0]; // example concatenation
-//    assign rm = instruction[3:16];
-    assign rn = instruction[19:16];
-    assign rm = instruction[3:0];
+    ConditionCheck CC(
+        .condition(cond),
+        .status_flags(status_reg_out),
+        .cond_out(condition_check_out)
+    );
+
     
-    assign imm = i;
-    assign signed_imm_24 = instruction[23:0];
-    assign Dest = rd;
-    assign output_instruction_memory = instruction;
 
 endmodule
+
 
